@@ -2,6 +2,9 @@ var schedule = require('node-schedule');
 var amqp = require('amqplib/callback_api');
 var amqpConn = null; 
 var amqp = require('amqplib/callback_api');
+require('dotenv').config();
+var recieveURL = require('../server');
+
 
 // if the connection is closed or fails to be established at all, we will reconnect
 var amqpConn = null;
@@ -117,9 +120,9 @@ var closeOnErr = function (err) {
   return true;
 }
 
-setInterval(function() {
-  publish("", "jobs", new Buffer("work work work"));
-}, 1000000);
+recieveURL.on('url', function (event) {
+  publish("", "jobs", new Buffer(event));
+});
 
 start();
 
