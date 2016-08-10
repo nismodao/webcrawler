@@ -20,13 +20,13 @@ app.post('/', function (req, res) {
       res.end();
     } else if (created) {
         publish("", "jobs", new Buffer(url));
-        res.send('job sent to queu for processing');
+        res.json({url: url, jobId: page._id, status: 'pending'});
     } else {
         Model.Url.findOne({url: url}, function (err, user) {
           if (page.html === undefined) {
-            res.send('robots are fetching this page');
+            res.send({url: url, jobId: page._id, status: 'robots are working on it'});
           } else {
-            res.send(page.html);
+            res.send({url: url, jobId: page._id, status: 'complete', html: page.html});
           }
         })
     }

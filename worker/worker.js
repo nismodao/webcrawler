@@ -5,6 +5,10 @@ var request       = require('request');
 var Model         = require('../db/config');
 
 var amqpConn = null;
+var consumerTag = null;
+var pubChannel = null;
+var consumerChannel = null;
+var offlinePubQueue = [];
 
 function start() {
   amqp.connect(process.env.CLOUDAMQP_URL + "?heartbeat=60", function(err, conn) {
@@ -29,11 +33,9 @@ function start() {
 
 function whenConnected() {
   startPublisher();
-  //startWorker();
+  startWorker();
 }
 
-var pubChannel = null;
-var offlinePubQueue = [];
 function startPublisher() {
   amqpConn.createConfirmChannel(function(err, ch) {
     if (closeOnErr(err)) return;
@@ -56,13 +58,13 @@ function startPublisher() {
 function publish(exchange, routingKey, content) {
   try {    
     pubChannel.publish(exchange, routingKey, content, { persistent: true },
-                      function(err, ok) {
-                        if (err) {
-                          console.error("[AMQP] publish", err);
-                          offlinePubQueue.push([exchange, routingKey, content]);
-                          pubChannel.connection.close();
-                        }
-                      });
+    function(err, ok) {
+      if (err) {
+        console.error("[AMQP] publish", err);
+        offlinePubQueue.push([exchange, routingKey, content]);
+        pubChannel.connection.close();
+      }
+    });
   } catch (e) {                                                                                                                               
     console.error("[AMQP] publish", e.message);
     offlinePubQueue.push([exchange, routingKey, content]);
@@ -71,6 +73,7 @@ function publish(exchange, routingKey, content) {
 // A worker that acks messages only if processed succesfully
 function startWorker() {
   amqpConn.createChannel(function(err, ch) {
+    consumerChannel = ch;
     if (closeOnErr(err)) return;
     ch.on("error", function(err) {
       console.error("[AMQP] channel error", err.message);
@@ -83,8 +86,11 @@ function startWorker() {
     ch.prefetch(10);
     ch.assertQueue("jobs", { durable: true }, function(err, _ok) {
       if (closeOnErr(err)) return;
-      ch.consume("jobs", processMsg, { noAck: false });
+      ch.consume("jobs", processMsg, { noAck: false }, function (err, ok) {
+      consumerTag = ok.consumerTag;
+      console.log('consumerTag from createChannel', consumerTag);
       console.log("Worker is started");
+      });
     });
     
     function processMsg(msg) {
@@ -102,9 +108,16 @@ function startWorker() {
   });
 }
 
-function stopWorker () {
-  amqpConn.close();
+function cancelWorker (consumerTag) {
+  consumerChannel.cancel(consumerTag, function (err, ok) {
+    if (err) {
+      console.log(err); 
+    } else {
+      console.log('cancel function called', ok);
+    }
+  });
 }
+
 function closeOnErr(err) {
   if (!err) return false;
   console.error("[AMQP] error", err);
@@ -119,7 +132,7 @@ function work(msg, cb) {
     if (!err && res.statusCode === 200) {
       Model.Url.findOneAndUpdate({url: url}, {html: body}, {new: true}, function (err, doc) {
         if (err) return console.log(err);
-        console.log(doc);
+        console.log('model updated');
       })
     }
   })
@@ -128,10 +141,14 @@ function work(msg, cb) {
 
 start();
 
-var j = schedule.scheduleJob('* * * * *', function(){
-  console.log('shceudler is on');
+var listen = schedule.scheduleJob('*/5 * * * *', function(){
+  console.log('schedule worker is on');
   startWorker();
-  stopWorker();
+});
+
+var stop = schedule.scheduleJob('*/2 * * * *', function(){
+  console.log('kill worker called');
+  cancelWorker(consumerTag);
 });
 
 module.exports = publish;
