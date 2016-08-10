@@ -1,26 +1,22 @@
-
-$("#btn").on("click", function (e) {
-  e.preventDefault();
-  var url = $("#query").val();
-  console.log(url);
-  $.post('/', {"message":url}, function (data) {
-    console.log(data);
-  });
-})
-
-
-class List extends React.Component {
+class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       jobs: [{url: "www.google.com", jobId: 1234, status: 'pending'}, {url: "www.espn.com", jobId: 4579, status: 'pending'}]
     };
   }
-  updateList() {
-    //when user add new link
-    //fetch
-    //this.setState
+  updateList(e) {
+    e.preventDefault();
+    var url = this.refs.url.value;
+    console.log(url);
+    var context = this;
+    $.post('/', {"message":url}, function (data) {
+    context.state.jobs.push(data);
+    context.setState({jobs: context.state.jobs});
+    console.log('this state after post', context.state.jobs);
+    });
   }
+
   updateJob() {
     //when user clicks on JobID
     //
@@ -28,6 +24,10 @@ class List extends React.Component {
   render() {
     return (
       <div>
+        <form id="url" onSubmit={this.updateList.bind(this)}>
+            <input type="text" name="yolo" id="query" ref="url"/>
+            <input type="submit"/>
+        </form>
         <ul>
           {this.state.jobs.map((page, index) => (
             <li key={index}> {page.url + " " + page.jobId + " " + page.status} </li> 
@@ -39,7 +39,7 @@ class List extends React.Component {
 }
 
 ReactDOM.render(
-  <List/>,
+  <App/>,
   document.getElementById('list')
 );
 
