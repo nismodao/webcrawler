@@ -128,6 +128,7 @@ function closeOnErr(err) {
 function work(msg, cb) {
   console.log("Got msg ", msg.content.toString());
   var url = msg.content.toString();
+  console.log('work message', "http://" + url);
   request("http://" + url, function (err, res, body) {
     if (!err && res.statusCode === 200) {
       Model.Url.findOneAndUpdate({url: url}, {html: body}, {new: true}, function (err, doc) {
@@ -141,14 +142,14 @@ function work(msg, cb) {
 
 start();
 
-var listen = schedule.scheduleJob('*/5 * * * *', function(){
-  console.log('schedule worker is on');
-  startWorker();
-});
+// var listen = schedule.scheduleJob('* * * * *', function(){
+//   console.log('schedule worker is on');
+//   startWorker();
+// });
 
-var stop = schedule.scheduleJob('*/2 * * * *', function(){
-  console.log('kill worker called');
-  cancelWorker(consumerTag);
-});
+// var stop = schedule.scheduleJob('*/2 * * * *', function(){
+//   console.log('kill worker called');
+//   cancelWorker(consumerTag);
+// });
 
 module.exports = publish;
