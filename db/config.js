@@ -1,10 +1,10 @@
-var MongoClient = require('mongodb').MongoClient;
-var Promise = require('bluebird');
-var mongoose = require('mongoose');
-Promise.promisifyAll(mongoose);
-var findOrCreate = require('mongoose-findorcreate');
 require('dotenv').config();
-var MONGODB_URI = process.env.MONGODB_URI;
+var MongoClient     = require('mongodb').MongoClient;
+var Promise         = require('bluebird');
+var mongoose        = require('mongoose');
+mongoose.Promise    = require('bluebird');
+var findOrCreate    = require('mongoose-findorcreate');
+var MONGODB_URI     = process.env.MONGODB_URI;
 var db;
 
 mongoose.connect(MONGODB_URI, 

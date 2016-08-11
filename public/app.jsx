@@ -31,7 +31,7 @@ class App extends React.Component {
         </form>
         <ul className="list">
           {this.state.jobs.map((page, index) => (
-            <li key={index}> {page.url + " -- " + "job ID" + " " + page.jobId + "-- " + "status is " + page.status} </li> 
+            <li key={index}> {page.url + " -- " + "job ID" + " " + page.jobId + " -- " + "status is " + page.status} </li> 
           ))}
         </ul>
       </div>
