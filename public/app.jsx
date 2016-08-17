@@ -9,7 +9,7 @@ class App extends React.Component {
     e.preventDefault();
     var url = this.refs.url.value;
     var context = this;
-    $.post('/', {"message":url}, (data) => {
+    $.post('/update', {"message":url}, (data) => {
       if (data.status === 'pending') {
         context.state.jobs.push(data);
         context.setState({jobs: context.state.jobs});  
