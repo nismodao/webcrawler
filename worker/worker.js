@@ -135,7 +135,7 @@ function work(msg, cb) {
   var result = '';
   stream.on('data', function(d) {
     len += Buffer.byteLength(d)
-    result += d
+    result += d;
     if (len > 400000) {
       stream.abort();
       console.log('file too big for download');
