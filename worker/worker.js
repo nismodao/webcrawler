@@ -127,14 +127,26 @@ function closeOnErr(err) {
 
 function work(msg, cb) {
   var url = msg.content.toString();
-  request("http://" + url, function (err, res, body) {
-    if (err) console.log('error from request worker', err);
-    if (!err && res.statusCode === 200) {
-      Model.Url.findOneAndUpdate({url: url}, {html: body}, {new: true}, function (err, doc) {
-        if (err) return console.log(err);
+  var stream = request({
+   url: 'http://'+ url,
+   encoding: 'utf8'
+  });
+  var len = 0;
+  var result = '';
+  stream.on('data', function(d) {
+    len += Buffer.byteLength(d)
+    result += d
+    if (len > 400000) {
+      stream.abort();
+      console.log('file too big for download');
+    }
+  });
+  stream.on('end', function () {
+    console.log('result is', result);
+    Model.Url.findOneAndUpdate({url: url}, {html: result}, {new: true}, function (err, doc) {
+      if (err) return console.log(err);
         console.log('model updated');
       })
-    }
   })
   cb(true);
 }
@@ -142,3 +154,7 @@ function work(msg, cb) {
 start();
 
 module.exports = publish;
+
+
+
+
