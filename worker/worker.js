@@ -146,8 +146,8 @@ function work(msg, cb) {
     Model.Url.findOneAndUpdate({url: url}, {html: result}, {new: true}, function (err, doc) {
       if (err) return console.log(err);
         console.log('model updated');
-      })
-  })
+      });
+  });
   cb(true);
 }
 
