@@ -1,5 +1,8 @@
 # Web Archiver
 
+
+![preview](https://raw.githubusercontent.com/nismodao/webcrawler/master/webcrawler.png)
+
 ![preview](https://raw.githubusercontent.com/nismodao/webcrawler/master/out.gif)
 
 
